@@ -28,7 +28,7 @@ msg_086,digest,business_update,This business message appears legitimate but can 
 msg_014,mute,promotion,"Similar messages were repeatedly dismissed, muted, or reported by this user.",0.84,message_0258;message_0018;message_0017
 msg_094,mute,promotion,"Similar messages were repeatedly dismissed, muted, or reported by this user.",0.84,message_0356;message_0048;message_0357
 msg_029,digest,promotion,This group message may be useful later but is not interrupt-worthy.,0.66,message_0095;message_0113;message_0332
-msg_105,mute,forward,"This is a heavily forwarded, low-accountability message that can be suppressed.",0.87,message_0373;message_0233
+msg_105,mute,forward,"This is a heavily forwarded, low-accountability message that can be suppressed.",0.87,message_0373;message_0233;message_0122
 msg_002,notify,urgent,A direct mention creates an immediate dependency for the user.,0.88,message_0003;message_0059;message_0169
 msg_010,digest,business_update,A trusted business update is useful but does not require an interruption.,0.76,message_0011;message_0242;message_0075
 msg_078,mute,forward,"This is a heavily forwarded, low-accountability message that can be suppressed.",0.87,message_0211;message_0212
@@ -42,7 +42,7 @@ msg_109,mute,payment,"Similar messages were repeatedly dismissed, muted, or repo
 msg_108,mute,scam,The message requests credentials or uses a coercive account-security claim.,0.97,message_0093;message_0094;message_0236
 msg_019,mute,payment,"Similar messages were repeatedly dismissed, muted, or reported by this user.",0.84,message_0277;message_0094;message_0093
 msg_088,mute,unknown,"Similar messages were repeatedly dismissed, muted, or reported by this user.",0.84,message_0025;message_0224;message_0232
-msg_056,mute,event,"Similar messages were repeatedly dismissed, muted, or reported by this user.",0.84,message_0241;message_0168;message_0078
+msg_056,digest,event,This group message may be useful later but is not interrupt-worthy.,0.66,message_0168;message_0359;message_0013
 msg_027,digest,promotion,A known business sent an optional promotion that can wait for a digest.,0.73,message_0272;message_0033;message_0007
 msg_050,digest,event,This business message appears legitimate but can be reviewed later.,0.62,message_0279;message_0278;message_0155
 msg_083,digest,unknown,This group message may be useful later but is not interrupt-worthy.,0.66,message_0219
@@ -51,7 +51,7 @@ msg_033,digest,greeting,This group greeting is harmless but does not require an 
 msg_061,mute,greeting,"Similar messages were repeatedly dismissed, muted, or reported by this user.",0.84,message_0080;message_0177;message_0193
 msg_020,mute,forward,This group message is routine social noise without a user-specific need.,0.78,message_0049;message_0095;message_0390
 msg_017,mute,unknown,"Similar messages were repeatedly dismissed, muted, or reported by this user.",0.84,message_0090;message_0089;message_0319
-msg_058,mute,forward,"This is a heavily forwarded, low-accountability message that can be suppressed.",0.87,message_0039;message_0040;message_0241
+msg_058,mute,forward,"This is a heavily forwarded, low-accountability message that can be suppressed.",0.87,message_0241;message_0039;message_0040
 msg_026,mute,business_update,"Similar messages were repeatedly dismissed, muted, or reported by this user.",0.84,message_0032;message_0107;message_0108
 msg_047,notify,event,A group operational update is relevant to the user's near-term plans.,0.84,message_0001;message_0029;message_0044
 msg_046,mute,scam,The message requests credentials or uses a coercive account-security claim.,0.97,message_0148;message_0147;message_0024
@@ -64,7 +64,7 @@ msg_085,digest,business_update,This business message appears legitimate but can 
 msg_001,notify,urgent,A group operational update is relevant to the user's near-term plans.,0.84,message_0057;message_0139;message_0240
 msg_021,digest,payment,This group message may be useful later but is not interrupt-worthy.,0.66,message_0029;message_0044;message_0098
 msg_028,mute,promotion,"Similar messages were repeatedly dismissed, muted, or reported by this user.",0.84,message_0034;message_0112;message_0111
-msg_012,mute,forward,"This is a heavily forwarded, low-accountability message that can be suppressed.",0.87,message_0079;message_0247;message_0194
+msg_012,mute,forward,"This is a heavily forwarded, low-accountability message that can be suppressed.",0.87,message_0079;message_0194;message_0178
 msg_064,mute,payment,"Similar messages were repeatedly dismissed, muted, or reported by this user.",0.84,message_0201;message_0087;message_0183
 msg_103,digest,personal,"This personal message is safe and useful, but can wait for a digest.",0.69,message_0382;message_0065;message_0231
 msg_031,notify,event,A group operational update is relevant to the user's near-term plans.,0.84,message_0227;message_0249;message_0055
@@ -101,9 +101,9 @@ msg_073,mute,forward,"This is a heavily forwarded, low-accountability message th
 msg_054,mute,unknown,"Similar messages were repeatedly dismissed, muted, or reported by this user.",0.84,message_0391;message_0389;message_0163
 msg_068,digest,unknown,This group message may be useful later but is not interrupt-worthy.,0.66,message_0191;message_0192
 msg_100,notify,urgent,A personal sender indicates a time-sensitive request or deadline.,0.83,message_0362;message_0228;message_0117
-msg_062,mute,forward,"This is a heavily forwarded, low-accountability message that can be suppressed.",0.87,message_0043;message_0029;message_0044
+msg_062,mute,forward,"This is a heavily forwarded, low-accountability message that can be suppressed.",0.87,message_0043;message_0271;message_0029
 msg_096,digest,personal,"This personal message is safe and useful, but can wait for a digest.",0.69,none
-msg_043,notify,urgent,A group operational update is relevant to the user's near-term plans.,0.84,message_0129;message_0215;message_0179
+msg_043,mute,forward,"This is a heavily forwarded, low-accountability message that can be suppressed.",0.87,message_0271;message_0410;message_0129
 msg_077,digest,payment,This group message may be useful later but is not interrupt-worthy.,0.66,message_0051;message_0364;message_0037
 msg_081,digest,unknown,This group message may be useful later but is not interrupt-worthy.,0.66,message_0217
 msg_025,notify,business_update,A trusted business sent a time-sensitive update tied to the user's relationship.,0.84,message_0239;message_0004;message_0105

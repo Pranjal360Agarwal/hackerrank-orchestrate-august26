@@ -17,6 +17,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Iterable
 
+from media import MediaAnalyzer
+
 
 OUTPUT_COLUMNS = [
     "message_id", "action", "message_type", "reason", "confidence",
@@ -48,6 +50,7 @@ EVENT_WORDS = {
 PROMO_WORDS = {
     "offer", "sale", "discount", "coupon", "promo", "shop", "buy", "order now",
     "save", "% off", "deal", "cashback", "selected products", "new here",
+    "selling", "for sale", "unsubscribe", "marketing messages", "itinerary",
 }
 GREETING_WORDS = {"good morning", "good night", "good evening", "blessings", "good vibes"}
 
@@ -108,6 +111,7 @@ class Router:
         self.events = {
             row["message_id"]: row for row in read_csv(dataset / "message_events.csv")
         }
+        self.media = MediaAnalyzer(dataset)
         self.history_by_user: dict[str, list[dict[str, str]]] = defaultdict(list)
         for row in read_csv(dataset / "message_history.csv"):
             self.history_by_user[row["user_id"]].append(row)
@@ -120,16 +124,24 @@ class Router:
         text = message.get("message_text", "").lower()
         if any(re.search(pattern, text, flags=re.DOTALL) for pattern in RISK_PATTERNS):
             return "scam"
-        if message.get("forwarded_count") not in ("", "0") or "fwd" in text or "forward" in text:
-            return "forward"
         if phrase_present(text, PROMO_WORDS):
             return "promotion"
-        if any(word in text for word in ("payment", "invoice", "card", "banking", "transaction", "refund")):
-            return "payment"
+        if re.search(r"\b(?:rs\.?|₹)\s?\d", text):
+            return "promotion"
         if phrase_present(text, GREETING_WORDS):
             return "greeting"
-        if phrase_present(text, EVENT_WORDS):
+        if "safety advisory" in text or "never ask for otp" in text:
+            return "business_update"
+        if any(word in text for word in ("payment", "invoice", "card", "banking", "transaction", "refund")):
+            return "payment"
+        if (message.get("conversation_type") != "personal") and phrase_present(text, EVENT_WORDS):
             return "event"
+        if message.get("forwarded_count") not in ("", "0") or "fwd" in text or "forward" in text:
+            return "forward"
+        if message.get("conversation_type") == "group" and (
+            f"@{message.get('user_id', '').lower()}" in text or "anyone" in text or "dm if" in text
+        ):
+            return "personal"
         if message.get("conversation_type") == "business":
             return "business_update"
         if message.get("conversation_type") == "personal":
@@ -172,7 +184,9 @@ class Router:
         history_negative = sum(item.dismissed + item.muted + item.reported for item in evidence)
         conversation = message.get("conversation_type", "")
         user = self.users.get(message["user_id"], {})
-        urgent = phrase_present(lower, URGENT_WORDS) or bool(re.search(r"\b(?:in|within) \d{1,2} min", lower))
+        urgent = phrase_present(lower, URGENT_WORDS) or bool(re.search(r"\b\d{1,2}\s*(?:min|mins|minutes)\b", lower))
+        if "nothing urgent" in lower or "not urgent" in lower:
+            urgent = False
         direct_mention = f"@{message['user_id'].lower()}" in lower
 
         # Safety is deliberately non-negotiable: personalization never overrides it.
@@ -198,7 +212,10 @@ class Router:
                                         "This promotional sender is not useful for this user or has been opted out.")
                 return self._result(message, "digest", "promotion", 0.73, evidence_ids,
                                     "A known business sent an optional promotion that can wait for a digest.")
-            if category in {"payment", "business_update"} and trusted and active:
+            if category in {"payment", "business_update", "event"} and trusted and active:
+                if category == "event" and any(word in lower for word in ("appointment", "prescription", "pickup", "scheduled time")):
+                    return self._result(message, "notify", "event", 0.84, evidence_ids,
+                                        "A trusted health or appointment update needs attention before its scheduled time.")
                 if urgent or any(word in lower for word in ("delivery", "appointment", "packed", "due today", "failed")):
                     return self._result(message, "notify", "business_update", 0.84, evidence_ids,
                                         "A trusted business sent a time-sensitive update tied to the user's relationship.")
@@ -211,21 +228,32 @@ class Router:
             membership = self.group_members.get((message.get("group_id", ""), message["user_id"]), {})
             group = self.groups.get(message.get("group_id", ""), {})
             muted = membership.get("group_muted_by_user") == "1"
-            sender_is_admin = membership.get("role") == "admin" or "admin" in lower
+            sender_membership = self.group_members.get(
+                (message.get("group_id", ""), message.get("sender_user_id", "")), {}
+            )
+            sender_is_admin = sender_membership.get("role") == "admin" or "admin" in lower
             operational = category == "event" and (urgent or sender_is_admin)
+            critical_operational = operational and any(
+                word in lower for word in ("tanker", "water", "valve", "fire", "gas leak", "evacuate", "power outage")
+            )
             if muted and not (direct_mention or operational):
                 return self._result(message, "mute", category, 0.82, evidence_ids,
                                     "The user muted this group and the message has no direct or urgent exception.")
             if direct_mention and (urgent or "work" in group.get("group_type", "")):
-                return self._result(message, "notify", "urgent", 0.88, evidence_ids,
+                output_type = "urgent" if "work" in group.get("group_type", "") else "personal"
+                return self._result(message, "notify", output_type, 0.88, evidence_ids,
                                     "A direct mention creates an immediate dependency for the user.")
             if operational:
                 action = "notify" if urgent else "digest"
-                return self._result(message, action, "event", 0.84 if action == "notify" else 0.72, evidence_ids,
+                output_type = "urgent" if critical_operational else "event"
+                return self._result(message, action, output_type, 0.84 if action == "notify" else 0.72, evidence_ids,
                                     "A group operational update is relevant to the user's near-term plans.")
-            if category in {"greeting", "forward"}:
+            if category == "forward":
                 return self._result(message, "mute", category, 0.78, evidence_ids,
                                     "This group message is routine social noise without a user-specific need.")
+            if category == "greeting":
+                return self._result(message, "digest", category, 0.68, evidence_ids,
+                                    "This group greeting is harmless but does not require an interruption.")
             return self._result(message, "digest", category, 0.66, evidence_ids,
                                 "This group message may be useful later but is not interrupt-worthy.")
 
@@ -258,7 +286,7 @@ def main() -> None:
     args = parser.parse_args()
     router = Router(args.dataset)
     messages = read_csv(args.dataset / "messages.csv")
-    predictions = [router.route(message) for message in messages]
+    predictions = [router.route(router.media.enrich(message)) for message in messages]
     with args.output.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=OUTPUT_COLUMNS)
         writer.writeheader()

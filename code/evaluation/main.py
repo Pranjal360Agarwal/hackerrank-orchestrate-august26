@@ -60,7 +60,7 @@ def validate_output(output_path: Path, message_path: Path) -> list[str]:
 def evaluate_examples(dataset: Path) -> None:
     router = Router(dataset)
     examples = read_csv(dataset / "sample_messages.csv")
-    predictions = [router.route(row) for row in examples]
+    predictions = [router.route(router.media.enrich(row)) for row in examples]
     action_correct = sum(p["action"] == truth["action"] for p, truth in zip(predictions, examples))
     type_correct = sum(p["message_type"] == truth["message_type"] for p, truth in zip(predictions, examples))
     joint_correct = sum(

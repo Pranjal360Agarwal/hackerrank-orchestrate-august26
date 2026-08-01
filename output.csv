@@ -71,7 +71,7 @@ msg_031,notify,event,A group operational update is relevant to the user's near-t
 msg_057,notify,urgent,A direct mention creates an immediate dependency for the user.,0.88,message_0041;message_0266;message_0003
 msg_087,mute,unknown,"Similar messages were repeatedly dismissed, muted, or reported by this user.",0.84,message_0391;message_0223;message_0164
 msg_067,digest,payment,This group message may be useful later but is not interrupt-worthy.,0.66,message_0098;message_0068;message_0271
-msg_039,notify,personal,A direct mention creates an immediate dependency for the user.,0.88,message_0364;message_0051;message_0037
+msg_039,notify,personal,A direct mention creates an immediate dependency for the user.,0.88,message_0364;message_0037;message_0051
 msg_082,digest,unknown,This group message may be useful later but is not interrupt-worthy.,0.66,message_0397;message_0218;message_0380
 msg_066,mute,promotion,"Similar messages were repeatedly dismissed, muted, or reported by this user.",0.84,message_0257;message_0402;message_0188
 msg_049,digest,promotion,A known business sent an optional promotion that can wait for a digest.,0.73,message_0154;message_0291;message_0153

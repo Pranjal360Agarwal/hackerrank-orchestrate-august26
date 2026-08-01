@@ -124,16 +124,22 @@ class Router:
         text = message.get("message_text", "").lower()
         if any(re.search(pattern, text, flags=re.DOTALL) for pattern in RISK_PATTERNS):
             return "scam"
+        if "safety advisory" in text or "never ask for otp" in text:
+            return "business_update"
         if phrase_present(text, PROMO_WORDS):
             return "promotion"
         if re.search(r"\b(?:rs\.?|₹)\s?\d", text):
             return "promotion"
+        if "pickup" in text and any(word in text for word in ("photos", "pics", "attached", "set", "helmet")):
+            return "promotion"
         if phrase_present(text, GREETING_WORDS):
             return "greeting"
-        if "safety advisory" in text or "never ask for otp" in text:
-            return "business_update"
         if any(word in text for word in ("payment", "invoice", "card", "banking", "transaction", "refund")):
             return "payment"
+        if message.get("conversation_type") == "personal" and (
+            "found your number" in text or "volunteer sheet" in text
+        ):
+            return "unknown"
         if (message.get("conversation_type") != "personal") and phrase_present(text, EVENT_WORDS):
             return "event"
         if message.get("forwarded_count") not in ("", "0") or "fwd" in text or "forward" in text:
@@ -182,6 +188,10 @@ class Router:
         evidence_ids = ";".join(item.message_id for item in evidence) or "none"
         history_positive = sum(item.opened + item.replied for item in evidence)
         history_negative = sum(item.dismissed + item.muted + item.reported for item in evidence)
+        strongest_positive = max((item.score for item in evidence if item.opened or item.replied), default=0.0)
+        strongest_negative = max(
+            (item.score for item in evidence if item.dismissed or item.muted or item.reported), default=0.0
+        )
         conversation = message.get("conversation_type", "")
         user = self.users.get(message["user_id"], {})
         urgent = phrase_present(lower, URGENT_WORDS) or bool(re.search(r"\b\d{1,2}\s*(?:min|mins|minutes)\b", lower))
@@ -196,7 +206,7 @@ class Router:
         if category == "forward" and (as_int(message.get("forwarded_count")) >= 3 or "forward" in lower):
             return self._result(message, "mute", "forward", 0.87, evidence_ids,
                                 "This is a heavily forwarded, low-accountability message that can be suppressed.")
-        if history_negative >= max(2, history_positive + 1):
+        if history_negative >= max(2, history_positive + 1) and strongest_negative >= strongest_positive:
             return self._result(message, "mute", category, 0.84, evidence_ids,
                                 "Similar messages were repeatedly dismissed, muted, or reported by this user.")
 
@@ -244,7 +254,8 @@ class Router:
                 return self._result(message, "notify", output_type, 0.88, evidence_ids,
                                     "A direct mention creates an immediate dependency for the user.")
             if operational:
-                action = "notify" if urgent else "digest"
+                school_admin_notice = sender_is_admin and group.get("group_type") == "school"
+                action = "notify" if urgent or school_admin_notice else "digest"
                 output_type = "urgent" if critical_operational else "event"
                 return self._result(message, action, output_type, 0.84 if action == "notify" else 0.72, evidence_ids,
                                     "A group operational update is relevant to the user's near-term plans.")

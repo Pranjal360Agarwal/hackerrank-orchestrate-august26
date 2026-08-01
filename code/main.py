@@ -140,10 +140,10 @@ class Router:
             "found your number" in text or "volunteer sheet" in text
         ):
             return "unknown"
-        if (message.get("conversation_type") != "personal") and phrase_present(text, EVENT_WORDS):
-            return "event"
         if message.get("forwarded_count") not in ("", "0") or "fwd" in text or "forward" in text:
             return "forward"
+        if (message.get("conversation_type") != "personal") and phrase_present(text, EVENT_WORDS):
+            return "event"
         if message.get("conversation_type") == "group" and (
             f"@{message.get('user_id', '').lower()}" in text or "anyone" in text or "dm if" in text
         ):
@@ -254,7 +254,7 @@ class Router:
                 return self._result(message, "notify", output_type, 0.88, evidence_ids,
                                     "A direct mention creates an immediate dependency for the user.")
             if operational:
-                school_admin_notice = sender_is_admin and group.get("group_type") == "school"
+                school_admin_notice = sender_is_admin and "school" in group.get("group_type", "")
                 action = "notify" if urgent or school_admin_notice else "digest"
                 output_type = "urgent" if critical_operational else "event"
                 return self._result(message, action, output_type, 0.84 if action == "notify" else 0.72, evidence_ids,
